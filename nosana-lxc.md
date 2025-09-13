@@ -3,7 +3,7 @@
 ## Overview
 
 This guide covers setting up a Nosana Grid host on Ubuntu within an LXC container, following the official documentation at: https://docs.nosana.com/hosts/grid-ubuntu.html
-Testes on 22.04 with 5090
+Tested on 22.04 with 5090 GPU.
 
 > [!NOTE]
 > **Prerequisites**: Install NVIDIA drivers, Docker, NVIDIA Docker, and essential packages. See https://github.com/en4ble1337/ai-linux-tools
