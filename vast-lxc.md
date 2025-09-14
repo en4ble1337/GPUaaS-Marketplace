@@ -2,7 +2,7 @@
 
 ## Installation Command
 
-Install Vast.ai without drivers and docker flag:
+Install Vast.ai without drivers and docker flag (assumption its already installed - part of the template):
 
 ```bash
 wget https://console.vast.ai/install -O install; sudo python3 install <api> --no-partitioning --no-driver --no-docker; history -d $((HISTCMD-1))
