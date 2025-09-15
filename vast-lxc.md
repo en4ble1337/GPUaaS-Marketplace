@@ -1,5 +1,17 @@
 # Vast.ai GPU Setup for Proxmox LXC
 
+> [!NOTE]
+> Before running the main installation script, you must install some essential system packages and Python libraries. This will prevent common errors during > the setup process. You can install all prerequisites by running the commands below:
+
+```bash
+# Update package list and install pip and build-essential
+sudo apt update
+sudo apt install python3-pip build-essential -y
+
+# Install the required Python 'requests' library
+pip3 install requests
+```
+
 ## Installation Command
 
 Install Vast.ai without drivers and docker flag (assumption its already installed - part of the template):
