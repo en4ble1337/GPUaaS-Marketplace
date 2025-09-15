@@ -7,6 +7,8 @@ Install Vast.ai without drivers and docker flag (assumption its already installe
 ```bash
 wget https://console.vast.ai/install -O install; sudo python3 install <api> --no-partitioning --no-driver --no-docker; history -d $((HISTCMD-1))
 ```
+[!NOTE:]
+> --no-partitioning possibly remove
 
 ## Container Configuration
 
