@@ -1,7 +1,7 @@
 # Vast.ai GPU Setup for Proxmox LXC
 
 > [!NOTE]
-> Before running the main installation script, you must install some essential system packages and Python libraries. This will prevent common errors during > the setup process. You can install all prerequisites by running the commands below:
+> Before running the main installation script, you must install some essential system packages and Python libraries. This will prevent common errors during > the setup process. You can install all prerequisites by running the commands below. Additional resource for vast: https://github.com/en4ble1337/vasttools?tab=readme-ov-file
 
 ```bash
 # Update package list and install pip and build-essential
