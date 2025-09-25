@@ -124,6 +124,7 @@ finish
 - NVML test passes successfully with this setup
 - Ready for listing on Vast.ai marketplace after installation
 
+## Storage overlay issue and GPU toolkit for Priv LXC container
 
 Since you're already using overlay2 storage driver, the issue is likely with the current Docker daemon configuration still having storage-opts that reference pquota. Let's check and fix this:
 
@@ -173,3 +174,77 @@ After making these changes, run the vast.ai self-test again:
 ```
 
 This should resolve the `--storage-opt is supported only for overlay over xfs with 'pquota' mount option` error.
+
+
+The error you're encountering is because Docker inside your LXC container doesn't have the NVIDIA Container Runtime configured properly. The `--runtime=nvidia` flag requires the nvidia-container-runtime to be installed and configured within your LXC container.
+
+## Solution: Install and Configure NVIDIA Container Toolkit
+
+Here's how to fix this issue step by step:
+
+### Step 1: Install NVIDIA Container Toolkit in the LXC Container
+
+Inside your LXC container (ID 6005), run the following commands:
+
+```bash
+# Configure the production repository
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+  sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+# Update package lists
+sudo apt-get update
+
+# Install the NVIDIA Container Toolkit
+sudo apt-get install -y nvidia-container-toolkit
+```
+
+### Step 2: Configure Docker to Use NVIDIA Runtime
+
+Use the nvidia-ctk command to automatically configure Docker:[1][2][3]
+
+```bash
+# Configure the container runtime
+sudo nvidia-ctk runtime configure --runtime=docker
+
+# Restart Docker daemon
+sudo systemctl restart docker
+```
+
+### Step 3: Configure NVIDIA Container Runtime for LXC Environment
+
+Since you're running Docker inside a **privileged** LXC container, you need to modify the NVIDIA container runtime configuration:[4][5]
+
+```bash
+# Edit the NVIDIA container runtime configuration
+sudo nano /etc/nvidia-container-runtime/config.toml
+```
+
+Find the line with `no-cgroups` and set it to `true`:
+```toml
+no-cgroups = true
+```
+
+This setting is **essential** for running Docker with GPU support inside LXC containers.[5][4]
+
+### Step 4: Verify the Configuration
+
+Check that the nvidia runtime is now available:
+
+```bash
+docker info | grep -i runtime
+```
+
+You should see output similar to:
+```
+Runtimes: io.containerd.runc.v2 runc nvidia
+```
+
+### Step 5: Test the Configuration
+
+Run the vast.ai bandwidth test command:
+
+```bash
+docker run --rm --runtime=nvidia --env NVIDIA_VISIBLE_DEVICES=0 vastai/test:bandwidth-test-nvidia --csv --device=0 --memory=pinned --mode=range --start=1073741824 --end=1073741824 --increment=1
+```
