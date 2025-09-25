@@ -125,5 +125,51 @@ finish
 - Ready for listing on Vast.ai marketplace after installation
 
 
-Docker is trying to use --storage-opt with overlay storage driver, but it requires XFS filesystem with pquota mount option.
-Looking at the vast.ai installation script, I can see it specifically sets up Docker storage on XFS with project quotas. However, in your LXC container setup, this configuration is likely not working properly.
+Since you're already using overlay2 storage driver, the issue is likely with the current Docker daemon configuration still having storage-opts that reference pquota. Let's check and fix this:
+
+1. **Check current Docker daemon configuration:**
+   ```bash
+   cat /etc/docker/daemon.json
+   ```
+
+2. **Look for any storage-opts entries** that might be causing the issue. Based on the vast.ai installation script, it likely contains something like:
+   ```json
+   {
+     "storage-opts": ["overlay2.size=10G"]
+   }
+   ```
+
+3. **Remove or modify the problematic storage-opts.** Edit `/etc/docker/daemon.json` to remove any storage-opts entries, or replace the entire file with:
+   ```json
+   {
+     "storage-driver": "overlay2",
+     "live-restore": true,
+     "registry-mirrors": [
+       "https://registry-1.docker.io",
+       "https://docker1.vast.ai",
+       "https://docker2.vast.ai",
+       "https://docker3.vast.ai",
+       "https://docker4.vast.ai",
+       "https://docker5.vast.ai"
+     ]
+   }
+   ```
+
+4. **Restart Docker:**
+   ```bash
+   systemctl restart docker
+   ```
+
+5. **Verify the configuration:**
+   ```bash
+   docker info | grep -A 10 "Storage Driver"
+   ```
+
+The key issue is that Docker is trying to use storage options (likely size limits) that require XFS with pquota, but in your LXC environment, even though you're using overlay2, the underlying filesystem doesn't have the required project quota support.
+
+After making these changes, run the vast.ai self-test again:
+```bash
+./vast.py self-test machine 43356
+```
+
+This should resolve the `--storage-opt is supported only for overlay over xfs with 'pquota' mount option` error.
