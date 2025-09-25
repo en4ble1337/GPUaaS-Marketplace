@@ -123,8 +123,8 @@ finish
 - The configuration allows for GPU passthrough in LXC containers
 - NVML test passes successfully with this setup
 - Ready for listing on Vast.ai marketplace after installation
-
-## Storage overlay issue and GPU toolkit for Priv LXC container
+> [!NOTE]
+> ## Storage overlay issue and GPU toolkit for Priv LXC container
 
 Since you're already using overlay2 storage driver, the issue is likely with the current Docker daemon configuration still having storage-opts that reference pquota. Let's check and fix this:
 
