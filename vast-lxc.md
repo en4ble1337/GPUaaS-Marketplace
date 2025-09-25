@@ -123,3 +123,7 @@ finish
 - The configuration allows for GPU passthrough in LXC containers
 - NVML test passes successfully with this setup
 - Ready for listing on Vast.ai marketplace after installation
+
+
+Docker is trying to use --storage-opt with overlay storage driver, but it requires XFS filesystem with pquota mount option.
+Looking at the vast.ai installation script, I can see it specifically sets up Docker storage on XFS with project quotas. However, in your LXC container setup, this configuration is likely not working properly.
