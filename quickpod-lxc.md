@@ -1,4 +1,5 @@
 cat /etc/pve/lxc/6006.conf
+```bash
 #try running speedtest first then run the following
 #/var/lib/quickpod/update_scripts.sh
 arch: amd64
@@ -36,9 +37,10 @@ lxc.mount.entry: /dev/loop5 dev/loop5 none bind,optional,create=file
 lxc.mount.entry: /dev/loop6 dev/loop6 none bind,optional,create=file
 lxc.mount.entry: /dev/loop7 dev/loop7 none bind,optional,create=file
 lxc.init.cmd: /sbin/init systemd.unified_cgroup_hierarchy=0
-
+```
 
 cat /etc/docker/daemon.json
+```bash
 {
   "exec-opts": ["native.cgroupdriver=cgroupfs"],
   "runtimes": {
@@ -51,3 +53,4 @@ cat /etc/docker/daemon.json
 }
 
 /var/lib/quickpod/machine_open_port_range
+```
