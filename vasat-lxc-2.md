@@ -446,4 +446,63 @@ Your Proxmox LXC GPU node is now properly configured for vast.ai’s marketplace
 
 ***
 
-With this guide, you can reproduce the setup from scratch and ensure the NVIDIA GPU is correctly passed through, Docker and NVIDIA Container Toolkit are configured for cgroupfs, and the Vast.ai NVML test consistently succeeds.
+./vast self-test machine 44888 --ignore-requirements
+Machine ID 44888 does not meet the requirements:
+Reliability <= 0.90
+Machine ID 44888 does not meet the following requirements:
+Reliability <= 0.90
+Continuing despite unmet requirements because --ignore-requirements is set.
+Instance 26655186 status: None... waiting for 'running' status.
+Instance 26655186 status: None... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Instance 26655186 status: loading... waiting for 'running' status.
+Successfully established HTTPS connection to the server.
+Starting tests...
+Running system requirements test...
+TESTED : System requirements test passed.
+Running ResNet50 test on all GPUs...
+TESTED : ResNet50 passed
+Running ECC test on all GPUs...
+TESTED : ECC test passed.
+Running NCCL distributed test with 1 GPUs...
+TESTED : NCCL distributed test passed.
+Running stress-ng and gpu-burn tests simultaneously for 60 seconds...
+Test completed successfully.
+Test passed.
+destroying instance 26655186.
+Instance 26655186 destroyed successfully on attempt 1.
+Machine: 44888 Done with testing remote.py results DONE
+Test completed successfully.
