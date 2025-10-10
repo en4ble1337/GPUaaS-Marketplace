@@ -273,6 +273,177 @@ ln -sf /usr/local/bin/vastai-test-wrapper.sh /var/lib/vastai_kaalia/test_nvml_er
 - **Runtime Logs**: Check `/var/log/syslog` for NVIDIA toolkit errors.
 - **Systemd Parameter**: `lxc.init.cmd` must use `systemd.unified_cgroup_hierarchy=0`.
 
+# GPUaaS on Proxmox LXC with vast.ai Selftest Pass  
+Comprehensive step-by-step guide for setting up a Proxmox LXC container (Ubuntu 22.04) with NVIDIA GPU passthrough, Docker using overlay2+XFS quotas, and passing vast.ai’s selftest.  
+
+---
+
+## Prerequisites  
+- Proxmox VE host (Debian Stretch or later)  
+- Ubuntu 22.04 LXC template  
+- NVIDIA GPU present and drivers installed on host  
+- `vast` CLI installed in the LXC after setup  
+- Sufficient free space in an LVM-thin pool (e.g., `local-lvm` / `pve/data`)  
+
+---
+
+## 1. Proxmox Host: Prepare XFS-Quotas Storage for Docker  
+
+1.1. Identify your LVM-thin pool:  
+```
+# Should list an LV of type “thinpool” (e.g., pve/data)
+lvs -o+seg_monitor
+```
+
+1.2. Create a thin-provisioned LV for Docker data:  
+```bash
+lvcreate -V 800G -T -n docker-thin pve/data
+```
+> -  `-V 800G`: sets an 800 GiB per-container quota ceiling (thin)  
+> -  You can adjust size as desired; actual consumption grows on write.  
+
+1.3. Format the new LV as XFS with ftype=1 (we enable quotas at mount):  
+```bash
+mkfs.xfs -f -n ftype=1 /dev/pve/docker-thin
+```
+
+1.4. Create and mount on the host:  
+```bash
+mkdir -p /mnt/docker-xfs
+echo '/dev/pve/docker-thin /mnt/docker-xfs xfs defaults,pquota 0 0' >> /etc/fstab
+mount /mnt/docker-xfs
+```
+
+1.5. Verify quotas on the host:  
+```bash
+xfs_quota -x -c "report -p" /mnt/docker-xfs
+```
+
+---
+
+## 2. Proxmox Host → LXC: Bind-Mount & Enable Features  
+
+2.1. Stop the container and edit its config (`<CTID>`):  
+```bash
+pct stop <CTID>
+nano /etc/pve/lxc/<CTID>.conf
+```
+
+2.2. Add these lines (or merge with existing):  
+```ini
+features: nesting=1,fuse=1
+mp0: /mnt/docker-xfs,mp=/var/lib/docker
+```
+
+2.3. Restart the container:  
+```bash
+pct start <CTID>
+```
+
+---
+
+## 3. Inside LXC: Verify XFS + Quotas  
+
+3.1. Enter the container:  
+```bash
+pct enter <CTID>
+```
+
+3.2. Confirm `/var/lib/docker` mount:  
+```bash
+mount | grep '/var/lib/docker'
+# Shows XFS with “prjquota”
+```
+
+3.3. (Optional) Install XFS quota tools for inspection:  
+```bash
+apt update
+apt install -y xfsprogs quota
+```
+
+---
+
+## 4. Inside LXC: Install & Configure Docker  
+
+4.1. Install Docker:  
+```bash
+apt update
+apt install -y docker.io
+```
+
+4.2. Create or edit `/etc/docker/daemon.json`:  
+```json
+{
+  "exec-opts": ["native.cgroupdriver=cgroupfs"],
+  "live-restore": true,
+  "registry-mirrors": [
+    "https://registry-1.docker.io",
+    "https://docker1.vast.ai",
+    "https://docker2.vast.ai",
+    "https://docker3.vast.ai",
+    "https://docker4.vast.ai",
+    "https://docker5.vast.ai"
+  ],
+  "runtimes": {
+    "nvidia": {
+      "path": "/var/lib/vastai_kaalia/latest/kaalia_docker_shim",
+      "runtimeArgs": []
+    }
+  },
+  "storage-driver": "overlay2"
+}
+```
+
+4.3. Restart Docker cleanly:  
+```bash
+systemctl stop docker
+rm -rf /var/lib/docker/*
+systemctl enable docker
+systemctl start docker
+```
+
+4.4. Verify storage driver:  
+```bash
+docker info | grep "Storage Driver"
+# Should show: Storage Driver: overlay2
+```
+
+---
+
+## 5. Test Quota Enforcement  
+
+```bash
+docker run --rm --storage-opt size=50M alpine sh -c "df -h /"
+# Rootfs should be ~50 MiB
+```
+
+---
+
+## 6. NVIDIA GPU & vast.ai Selftest  
+
+6.1. Ensure NVIDIA runtime is available:  
+```bash
+docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+```
+
+6.2. Run the vast.ai selftest:  
+```bash
+vast selftest machine <machine_id>
+```
+All checks—including storage-opt enforcement—should pass.  
+
+---
+
+## 7. Summary of Key Lessons Learned  
+
+- **fuse-overlayfs** in LXC lacks per-container quotas → use **overlay2** + XFS pquota.  
+- Bind-mount an XFS-formatted LV (with `pquota`) into `/var/lib/docker` so Docker can enforce `--storage-opt size=`.  
+- Use LVM thin provisioning on existing `local-lvm` for flexible, on-demand space.  
+- Always restart Docker and clear `/var/lib/docker` after changing storage driver.  
+- Verify mounts and drivers before selftest.  
+
+Your Proxmox LXC GPU node is now properly configured for vast.ai’s marketplace!
+
 ***
 
 With this guide, you can reproduce the setup from scratch and ensure the NVIDIA GPU is correctly passed through, Docker and NVIDIA Container Toolkit are configured for cgroupfs, and the Vast.ai NVML test consistently succeeds.
